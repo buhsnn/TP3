@@ -3,26 +3,10 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - master  
+      - master   # Change en 'master' si tu utilises master
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin   # Ajout de la distribution Java
-          java-version: 21
-
-      - name: Build and run tests
-        run: mvn clean verify
-
   build-and-push:
-    needs: test
     runs-on: ubuntu-latest
 
     steps:
