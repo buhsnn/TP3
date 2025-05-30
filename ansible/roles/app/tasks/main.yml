@@ -1,0 +1,16 @@
+- name: Run App container
+  community.docker.docker_container:
+    name: simple-api
+    image: buhsnn/tp-devops-simple-api:latest
+    state: started
+    restart_policy: always
+    env:
+      SPRING_DATASOURCE_URL: "{{ SPRING_DATASOURCE_URL }}"
+      SPRING_DATASOURCE_USERNAME: "{{ SPRING_DATASOURCE_USERNAME }}"
+      SPRING_DATASOURCE_PASSWORD: "{{ SPRING_DATASOURCE_PASSWORD }}"
+    published_ports:
+      - "8080:8080"
+    networks:
+      - name: my_app_network
+  vars:
+    ansible_python_interpreter: /opt/docker_venv/bin/python

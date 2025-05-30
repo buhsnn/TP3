@@ -5,4 +5,6 @@
   roles:
     - docker
     - docker_network
-
+    - db
+    - app
+    - proxy

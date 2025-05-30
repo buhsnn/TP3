@@ -1,0 +1,18 @@
+---
+# tasks file for ansible/roles/db
+- name: Run PostgreSQL container
+  community.docker.docker_container:
+    name: my_postgres
+    image: buhsnn/tp-devops-database:latest
+    state: started
+    restart_policy: always
+    env:
+      SPRING_DATASOURCE_URL: "{{ SPRING_DATASOURCE_URL }}"
+      SPRING_DATASOURCE_USERNAME: "{{ SPRING_DATASOURCE_USERNAME }}"
+      SPRING_DATASOURCE_PASSWORD: "{{ SPRING_DATASOURCE_PASSWORD }}"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - name: my_app_network
+  vars:
+    ansible_python_interpreter: /opt/docker_venv/bin/python
