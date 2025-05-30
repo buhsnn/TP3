@@ -51,24 +51,3 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-http-server:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-http-server:${{ steps.generate_tag.outputs.tag }}
           push: true
-
-  deploy:
-    needs: build-and-push-docker-image
-    runs-on: ubuntu-24.04
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-
-    steps:
-      - name: Checkout ansible repo
-        uses: actions/checkout@v4
-        with:
-          path: ansible
-
-      - name: Deploy on remote server with Ansible
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.REMOTE_HOST }}
-          username: admin
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /chemin/vers/ton/projet/ansible
-            ansible-playbook -i ansible/inventories/setup.yml ansible/deploy.yml --limit prod
