@@ -1,0 +1,74 @@
+name: Docker Image CI/CD
+
+on:
+  workflow_run:
+    workflows: ["CI devops 2025"]
+    types:
+      - completed
+
+jobs:
+  build-and-push-docker-image:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+      - name: Generate dynamic tag
+        id: generate_tag
+        run: |
+          short_sha=$(echo "${{ github.sha }}" | cut -c1-7)
+          timestamp=$(date +'%Y%m%d-%H%M')
+          echo "tag=${timestamp}-${short_sha}" >> $GITHUB_OUTPUT
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./simple-api
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-simple-api:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-simple-api:${{ steps.generate_tag.outputs.tag }}
+          push: true
+
+      - name: Build and push database image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./database
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-database:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-database:${{ steps.generate_tag.outputs.tag }}
+          push: true
+
+      - name: Build and push httpd image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./http-server
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-http-server:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-http-server:${{ steps.generate_tag.outputs.tag }}
+          push: true
+
+  deploy:
+    needs: build-and-push-docker-image
+    runs-on: ubuntu-24.04
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout ansible repo
+        uses: actions/checkout@v4
+        with:
+          path: ansible
+
+      - name: Deploy on remote server with Ansible
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: admin
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /chemin/vers/ton/projet/ansible
+            ansible-playbook -i ansible/inventories/setup.yml ansible/deploy.yml --limit prod
