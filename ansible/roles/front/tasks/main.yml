@@ -1,0 +1,10 @@
+- name: Run front-end container
+  community.docker.docker_container:
+    name: my_front
+    image: buhsnn/tp-devops-front:latest
+    state: started
+    restart_policy: always
+    published_ports:
+      - "3000:80"
+    networks:
+      - name: my_app_network
