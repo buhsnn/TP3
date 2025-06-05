@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - master   # Change en 'master' si tu utilises master
+      - master  # Change si tu utilises une autre branche
 
 jobs:
   build-and-push:
@@ -44,17 +44,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout ansible repo
+      - name: Checkout repo
         uses: actions/checkout@v4
-        with:
-          path: ansible
 
-      - name: Run Ansible Playbook to deploy
+      - name: Deploy with Ansible via SSH
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.REMOTE_HOST }}
           username: admin
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /path/to/ansible/project
-            ansible-playbook -i ansible/inventories/setup.yml ansible/deploy.yml --limit prod
+            cd /home/admin/mon-projet/ansible  # Remplace par le vrai chemin sur ton serveur
+            ansible-playbook -i inventories/setup.yml deploy.yml
